@@ -1,0 +1,53 @@
+# nginx proxy address - http://172.17.0.1:60190
+#
+name: ghost
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: ghost:latest
+    container_name: ghost-app
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      NODE_ENV: production
+      url: https://${BASE_HOST_NAME:-$HOSTNAME}
+      database__client: mysql
+      database__connection__host: ghost-db
+      database__connection__user: ${DB_ADMIN_NAME:-root}
+      database__connection__database: ${DB_CREATE_DATABASE_NAME:-ghost}
+      database__connection__password: ${DB_ADMIN_PASS:-changeme_db_password}
+    ports:
+      - '172.17.0.1:60190:2368'
+    volumes:
+      - './rootfs/data/ghost:/var/lib/ghost/content'
+    networks:
+      - ghost
+
+  db:
+    image: mysql:8.0
+    container_name: ghost-db
+    hostname: ghost-db
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      MYSQL_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_db_password}
+      MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-ghost}
+    volumes:
+      - './rootfs/db/mysql/ghost:/var/lib/mysql'
+    networks:
+      - ghost
+
+networks:
+  ghost:
+    name: ghost
+    external: false
