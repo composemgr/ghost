@@ -43,7 +43,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_db_password}
       MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-ghost}
     volumes:
-      - './rootfs/db/mysql/ghost:/var/lib/mysql'
+      - './rootfs/data/db/mysql/ghost:/var/lib/mysql'
     networks:
       - ghost
 
