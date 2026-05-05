@@ -27,7 +27,7 @@ services:
     ports:
       - '172.17.0.1:60190:2368'
     volumes:
-      - './rootfs/data/ghost:/var/lib/ghost/content'
+      - './volumes/data/ghost:/var/lib/ghost/content'
     networks:
       - ghost
 
@@ -43,7 +43,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_db_password}
       MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-ghost}
     volumes:
-      - './rootfs/data/db/mysql/ghost:/var/lib/mysql'
+      - './volumes/data/db/mysql/ghost:/var/lib/mysql'
     networks:
       - ghost
 
