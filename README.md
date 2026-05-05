@@ -53,8 +53,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/data/ghost` - Data storage
-- `./rootfs/data/db/mysql/ghost` - Data storage
+- `./volumes/data/ghost` - Data storage
+- `./volumes/data/db/mysql/ghost` - Data storage
 
 ## 🔐 Security
 
