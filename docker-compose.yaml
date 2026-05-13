@@ -28,9 +28,11 @@ services:
       mail__transport: SMTP
       mail__options__host: ${EMAIL_SERVER_HOST:-172.17.0.1}
       mail__options__port: ${EMAIL_SERVER_PORT:-587}
-      mail__options__auth__user: ${EMAIL_SERVER_USER:-}
-      mail__options__auth__pass: ${EMAIL_SERVER_PASS:-}
+      mail__options__auth__user: ${EMAIL_SERVER_LOGIN_NAME:-}
+      mail__options__auth__pass: ${EMAIL_SERVER_LOGIN_PASS:-}
       mail__from: ${EMAIL_SERVER_MAIL_FROM:-noreply@example.com}
+      CONTAINER_NAME: ghost-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '172.17.0.1:60190:2368'
     volumes:
@@ -39,6 +41,24 @@ services:
       - db
     networks:
       - ghost
+      - proxy
+      - cloudflare
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://ghost-app:2368'
+      - 'cloudflare.hostname=ghost.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.ghost-app.entrypoints=http'
+      - 'traefik.http.routers.ghost-app-secure.tls=true'
+      - 'traefik.http.routers.ghost-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.ghost-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.ghost-app.middlewares=ghost-app-https-redirect'
+      - 'traefik.http.routers.ghost-app-secure.entrypoints=https'
+      - 'traefik.http.routers.ghost-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.ghost-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.ghost-app-secure.service=ghost-app'
+      - 'traefik.http.services.ghost-app.loadbalancer.server.port=2368'
 
   db:
     image: mysql:latest
@@ -53,6 +73,7 @@ services:
       MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-ghost}
       MYSQL_USER: ${DB_USER_NAME:-ghost}
       MYSQL_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
+      CONTAINER_NAME: ghost-db
     volumes:
       - './volumes/data/db/mysql/ghost:/var/lib/mysql'
     networks:
@@ -62,3 +83,7 @@ networks:
   ghost:
     name: ghost
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
