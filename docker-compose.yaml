@@ -1,5 +1,5 @@
 # nginx proxy address - http://172.17.0.1:60190
-#
+
 name: ghost
 x-logging: &default-logging
   options:
@@ -21,18 +21,27 @@ services:
       url: https://${BASE_HOST_NAME:-$HOSTNAME}
       database__client: mysql
       database__connection__host: ghost-db
-      database__connection__user: ${DB_ADMIN_NAME:-root}
+      database__connection__port: 3306
+      database__connection__user: ${DB_USER_NAME:-ghost}
       database__connection__database: ${DB_CREATE_DATABASE_NAME:-ghost}
-      database__connection__password: ${DB_ADMIN_PASS:-changeme_db_password}
+      database__connection__password: ${DB_USER_PASS:-changeme_db_password}
+      mail__transport: SMTP
+      mail__options__host: ${EMAIL_SERVER_HOST:-172.17.0.1}
+      mail__options__port: ${EMAIL_SERVER_PORT:-587}
+      mail__options__auth__user: ${EMAIL_SERVER_USER:-}
+      mail__options__auth__pass: ${EMAIL_SERVER_PASS:-}
+      mail__from: ${EMAIL_SERVER_MAIL_FROM:-noreply@example.com}
     ports:
       - '172.17.0.1:60190:2368'
     volumes:
       - './volumes/data/ghost:/var/lib/ghost/content'
+    depends_on:
+      - db
     networks:
       - ghost
 
   db:
-    image: mysql:8.0
+    image: mysql:latest
     container_name: ghost-db
     hostname: ghost-db
     restart: always
@@ -40,8 +49,10 @@ services:
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
-      MYSQL_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_db_password}
+      MYSQL_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_admin_password}
       MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-ghost}
+      MYSQL_USER: ${DB_USER_NAME:-ghost}
+      MYSQL_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
     volumes:
       - './volumes/data/db/mysql/ghost:/var/lib/mysql'
     networks:
